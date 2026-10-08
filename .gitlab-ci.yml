@@ -1,4 +1,4 @@
-# One job: validate every plan and run the scheduler tests.
+# One job: validate every plan, run the scheduler tests, and check commit identity.
 stages:
   - test
 
@@ -19,5 +19,7 @@ planner-check:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH
   script:
+    - apt-get update && apt-get install -y --no-install-recommends git ca-certificates
     - pip install --disable-pip-version-check -r requirements.txt
     - python -m planner check
+    - python scripts/check_commit_hygiene.py

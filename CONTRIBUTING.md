@@ -31,6 +31,10 @@ The scheduler is a heuristic. Resource-constrained scheduling is NP-hard. A chan
 
 `AGENT_PLANS_DIR` selects the live plan directory. The default is `plans/` inside the repository. Keep that default working.
 
+## Commit identity
+
+History uses one author and committer address, `noreply@example.com`. `scripts/check_commit_hygiene.py` walks every commit reachable from HEAD and exits non-zero if any commit has a `Co-authored-by:` or `Signed-off-by:` trailer, or any other author or committer email. CI runs that script. Commit with hooks disabled so a local `commit-msg` hook cannot append a trailer.
+
 ## Secrets
 
 Do not commit tokens, webhook URLs, private keys, or Tailscale hostnames. The Slack digest reads `SLACK_DIGEST_WEBHOOK` from the environment and only when `--post` is set. Tests use a placeholder URL.

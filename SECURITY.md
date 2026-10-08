@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Email `security@example.com` with a description, the version or commit you tested, and the impact. That address is a placeholder. Replace it with a real contact before you rely on it.
+Email `r0b0t@nings.io` with a description, the version or commit you tested, and the impact.
 
 Please do not open a public issue that includes exploit details, a live webhook URL, or credentials.
 

@@ -60,8 +60,7 @@ representative at an online or offline event.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the community leaders responsible for enforcement at
-`conduct@example.com`. That address is a placeholder. Replace it with a real
-contact before you rely on it.
+`r0b0t@nings.io`.
 
 All complaints will be reviewed and investigated promptly and fairly.
 

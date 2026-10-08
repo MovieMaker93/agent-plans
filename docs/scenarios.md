@@ -189,11 +189,11 @@ Directory: `examples/05-slipping-plan`. Plan id `slipping-plan-2026-10`.
 
 ```bash
 python3 -m planner validate examples/05-slipping-plan
-python3 -m planner schedule examples/05-slipping-plan
 python3 -m planner gantt examples/05-slipping-plan
-python3 -m planner status examples/05-slipping-plan
-python3 -m planner estimate examples/05-slipping-plan
-python3 -m planner calibrate
+```
+
+```bash
+python3 -m planner schedule examples/05-slipping-plan
 ```
 
 `schedule` still lays the origin graph out at the raw duration:
@@ -202,10 +202,18 @@ python3 -m planner calibrate
 wrote examples/05-slipping-plan/schedule.yaml: makespan 3h, critical path T1 -> T2 (origin)
 ```
 
+```bash
+python3 -m planner status examples/05-slipping-plan
+```
+
 `status` reports the slip:
 
 ```
 schedule_variance: 4h actual / 2h expected (n=1, pooled ratio 2.0000)
+```
+
+```bash
+python3 -m planner estimate examples/05-slipping-plan
 ```
 
 `estimate` reads `calibration.yaml` when that file exists, then applies the plan override first. The task lines are:
@@ -213,6 +221,10 @@ schedule_variance: 4h actual / 2h expected (n=1, pooled ratio 2.0000)
 ```
   T1 | cloud-worker | coding | raw 2h | factor 1.5 | n=0 | basis plan_factor | preview 3h | stored (none)
   T2 | accuracy | accuracy_review | raw 1h | factor 1.5 | n=0 | basis plan_factor | preview 1.5h | stored (none)
+```
+
+```bash
+python3 -m planner calibrate
 ```
 
 `calibrate` scans live plans under `plans/`, not `examples/`. With no done-task actuals in those plans it prints `samples: 0`. `--apply` would rebuild `calibration.yaml` from done tasks only. This example is still `in_progress`, so it does not move that file. The override is what the preview uses until a done task exists.
@@ -230,24 +242,28 @@ gantt
     T2 Review the change - accuracy :crit, t2, 11:00, 1h
 ```
 
-Reschedule from 15:00, six hours after the origin. Remaining work on T1 is `max(0, expected - actual)` = 0, so T1 is frozen at its start and the review is pushed to that clock. Copy the directory first if you want to keep this checkout unchanged. On the committed plan the command prints:
-
-```
-replan wrote schedule.yaml and gantt.md at version 2. Frozen: T1. Makespan 3h -> 7h.
-```
+Reschedule from 15:00, six hours after the origin. Remaining work on T1 is `max(0, expected - actual)` = 0, so T1 is frozen at its start and the review is pushed to that clock. Copy the directory first if you want to keep this checkout unchanged.
 
 ```bash
 python3 -m planner replan examples/05-slipping-plan --now --reason "implementation ran long" --at 2026-10-08T15:00:00-05:00
 ```
 
-Write the preview hours beside the raw triple. This also bumps `version`. On a fresh copy of the committed plan it prints:
+On the committed plan the command prints:
 
 ```
-wrote calibrated hours on 2 tasks in slipping-plan-2026-10 at version 2
+replan wrote schedule.yaml and gantt.md at version 2. Frozen: T1. Makespan 3h -> 7h.
 ```
+
+Write the preview hours beside the raw triple. This also bumps `version`.
 
 ```bash
 python3 -m planner apply-calibration examples/05-slipping-plan --at 2026-10-08T15:00:00-05:00
+```
+
+On a fresh copy of the committed plan it prints:
+
+```
+wrote calibrated hours on 2 tasks in slipping-plan-2026-10 at version 2
 ```
 
 Optimistic, likely, and pessimistic stay 1, 2, and 3 on T1. `calibrated` becomes 3 and 1.5. A later `apply-calibration` multiplies the raw expected again, so the factor does not compound.

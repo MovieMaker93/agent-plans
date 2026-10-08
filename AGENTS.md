@@ -174,7 +174,7 @@ Stop the proxy with `tailscale serve off`.
 
 `digest` is a dry run unless `--post` is set. `--post` reads `SLACK_DIGEST_WEBHOOK` (a Slack incoming webhook) from the environment and POSTs `dashboard/slack-payload.json`. The URL is never written into the repo. If `--post` is set and the variable is empty, the command exits 1 and sends nothing.
 
-A Planner or Grok Bot routine can run this on a schedule from the repo root:
+A Planner or an AI assistant can run this on a schedule from the repo root:
 
 ```bash
 python -m planner digest --post
