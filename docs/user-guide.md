@@ -199,7 +199,7 @@ When the variable is set, a `subplan` value that starts with `plans/` is resolve
 
 ## plan.yaml schema
 
-`schemas/plan.schema.json` is the editor contract (`$schema` draft 2020-12). `python3 -m planner check` (validate plus the unit tests) is the CI job in `.gitlab-ci.yml`. `validate` covers the schema plus rules a schema cannot express: unknown assignees, capability mismatch, missing inputs, cycles, and a `done` task with no passing attestation. `additionalProperties` is false on the plan, on a task, and on the nested objects below. `schema_version` is `1`.
+`schemas/plan.schema.json` is the editor contract (`$schema` draft 2020-12). `python3 -m planner check` (validate plus the unit tests) is the `planner-check` job in `.gitlab-ci.yml`. That job does not check commit history. The `commit-hygiene` job runs `scripts/check_commit_hygiene.py` only on GitLab, on the default branch and on tags, with a full clone. The guard itself runs when invoked. Before pushing maintainer history, run `python scripts/check_commit_hygiene.py --all && gitleaks detect`. `validate` covers the schema plus rules a schema cannot express: unknown assignees, capability mismatch, missing inputs, cycles, and a `done` task with no passing attestation. `additionalProperties` is false on the plan, on a task, and on the nested objects below. `schema_version` is `1`.
 
 | Field | Required | Meaning |
 | --- | --- | --- |
@@ -459,7 +459,7 @@ Positional `{summary,schedule}`. The default is `summary`, which writes `portfol
 
 ### check
 
-Validate every plan, then run the unit tests with `AGENT_PLANS_DIR` unset. No extra flags. The validate half still honors `AGENT_PLANS_DIR`.
+Validate every plan, then run the unit tests with `AGENT_PLANS_DIR` unset. No extra flags. The validate half still honors `AGENT_PLANS_DIR`. This command does not check commit history. Before pushing maintainer history, run `python scripts/check_commit_hygiene.py --all && gitleaks detect`.
 
 ```bash
 python3 -m planner check

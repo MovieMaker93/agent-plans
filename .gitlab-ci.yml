@@ -1,4 +1,5 @@
-# One job: validate every plan, run the scheduler tests, and check commit identity.
+# planner-check runs on merge requests and branches. commit-hygiene runs the
+# history guard on the default branch and on tags, with a full clone.
 stages:
   - test
 
@@ -9,8 +10,8 @@ cache:
   key:
     files:
       - requirements.txt
-  paths:
-    - .cache/pip
+    paths:
+      - .cache/pip
 
 planner-check:
   stage: test
@@ -22,4 +23,15 @@ planner-check:
     - apt-get update && apt-get install -y --no-install-recommends git ca-certificates
     - pip install --disable-pip-version-check -r requirements.txt
     - python -m planner check
-    - python scripts/check_commit_hygiene.py
+
+commit-hygiene:
+  stage: test
+  image: python:3.12-slim
+  variables:
+    GIT_DEPTH: "0"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+  script:
+    - apt-get update && apt-get install -y --no-install-recommends git ca-certificates
+    - python scripts/check_commit_hygiene.py --all

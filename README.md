@@ -23,7 +23,7 @@ Agent-plans is a planning framework for a team of AI agents. Each project is a `
 
 ## Quickstart
 
-Python 3.11 or newer. PyYAML is the only dependency.
+Python 3.11 or newer. PyYAML is the only Python package dependency. The commit-hygiene tests need the `git` executable, and they skip when `git` is missing.
 
 ```bash
 python3 -m venv .venv
@@ -70,7 +70,13 @@ Live plans are read from `plans/` unless `AGENT_PLANS_DIR` points somewhere else
 python3 -m planner check
 ```
 
-That validates every plan under `plans/` (or under `AGENT_PLANS_DIR` when it is set), including the template library, and runs the unit tests. The unit-test half clears `AGENT_PLANS_DIR` so snapshot comparisons stay on this checkout.
+That validates every plan under `plans/` (or under `AGENT_PLANS_DIR` when it is set), including the template library, and runs the unit tests. The unit-test half clears `AGENT_PLANS_DIR` so snapshot comparisons stay on this checkout. It does not check this repository's commit history.
+
+`scripts/check_commit_hygiene.py` checks maintainer commits on `main` when you invoke it. Before pushing that history:
+
+```bash
+python scripts/check_commit_hygiene.py --all && gitleaks detect
+```
 
 ## License
 
