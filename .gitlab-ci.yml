@@ -1,0 +1,23 @@
+# One job: validate every plan and run the scheduler tests.
+stages:
+  - test
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  key:
+    files:
+      - requirements.txt
+  paths:
+    - .cache/pip
+
+planner-check:
+  stage: test
+  image: python:3.12-slim
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH
+  script:
+    - pip install --disable-pip-version-check -r requirements.txt
+    - python -m planner check

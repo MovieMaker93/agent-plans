@@ -1,0 +1,95 @@
+# yaml-language-server: $schema=../../schemas/plan.schema.json
+schema_version: 1
+plan_id: slipping-plan-2026-10
+version: 1
+title: Slipping implementation
+goal: >
+  Finish an implementation that has already run long, then reschedule the review.
+owner: orchestrator
+definition_of_done: >
+  review.md says pass. The schedule may move when actuals slip.
+budget:
+  tokens: 80000
+  hours: 8
+  usd: 5
+human_approval_policy: >
+  No irreversible step is in this plan. Replanning from actuals is the Planner's job.
+constraints:
+  deadline: "2026-10-10T17:00:00-05:00"
+  max_parallel: 2
+  schedule_origin: "2026-10-08T09:00:00-05:00"
+calibration_override:
+  factor: 1.5
+deliverables:
+  - review.md
+tasks:
+  - id: T1
+    title: Implement the change
+    section: Build
+    task_type: coding
+    objective: Keep implementing. Actual hours are already past the raw estimate.
+    inputs: []
+    outputs:
+      - artifact: change_note.md
+        type: markdown
+    depends_on: []
+    estimate_hours:
+      optimistic: 1
+      likely: 2
+      pessimistic: 3
+    required_capabilities:
+      - coding
+    assignee: cloud-worker
+    acceptance_criteria:
+      - change_note.md names the behavior under test.
+    risk: low
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 10000
+      hours: 4
+      usd: 0
+    max_retries: 1
+    status: in_progress
+    actuals:
+      start: "2026-10-08T09:00:00-05:00"
+      end: null
+      hours: 4
+      attempts: 1
+
+  - id: T2
+    title: Review the change
+    section: Review
+    task_type: accuracy_review
+    objective: Review the change after implementation stops.
+    inputs:
+      - artifact: change_note.md
+        from_task: T1
+    outputs:
+      - artifact: review.md
+        type: markdown
+    depends_on:
+      - T1
+    estimate_hours:
+      optimistic: 1
+      likely: 1
+      pessimistic: 1
+    required_capabilities:
+      - verification
+    assignee: accuracy
+    acceptance_criteria:
+      - review.md says pass or fail.
+    risk: low
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 10000
+      hours: 4
+      usd: 0
+    max_retries: 1
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0

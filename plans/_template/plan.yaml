@@ -1,0 +1,154 @@
+# yaml-language-server: $schema=../../schemas/plan.schema.json
+# Annotated sample. Copy this directory to plans/YYYY-MM-DD-<slug>/ and edit.
+# Comments are for humans and agents. The CLI ignores them.
+# Full rules: AGENTS.md. Schema: schemas/plan.schema.json.
+schema_version: 1
+plan_id: template-brief
+version: 2
+title: Annotated template
+goal: Produce a one-page brief and record a human approval.
+owner: orchestrator
+definition_of_done: review.md says pass, and approval_record.md records the decision.
+budget:
+  # Project cap. Task budgets below are per-task caps, not a split of this budget.
+  tokens: 100000
+  hours: 4
+  usd: 5
+human_approval_policy: >
+  A human approves the brief before anyone treats it as final.
+  While that gate is open, keep working on anything it does not block.
+  The safe default is hold.
+constraints:
+  deadline: "2026-10-15T17:00:00-05:00"
+  max_parallel: 2
+  # Schedule times are hours after this instant. The Gantt uses it as the clock.
+  schedule_origin: "2026-10-08T09:00:00-05:00"
+# Defaults for `replan --now`. Omit the block to use these same numbers.
+replan_policy:
+  min_interval_minutes: 60
+  hysteresis_hours: 0.5
+  freeze_window_hours: 1
+provided_inputs: []
+deliverables:
+  - approval_record.md
+tasks:
+  - id: T1
+    title: Draft the brief
+    section: Draft
+    task_type: research
+    objective: Write a one-page brief from the project goal.
+    inputs: []
+    outputs:
+      - artifact: brief.md
+        type: markdown
+    # A task id means finish-to-start with lag 0.
+    # Or use a mapping: {task, type, lag_hours}.
+    # type is FS (default), SS, FF, or SF.
+    depends_on: []
+    estimate_hours:
+      # PERT hours. expected = (optimistic + 4*likely + pessimistic) / 6.
+      # calibrated is written by apply-calibration. Do not copy it into these three.
+      optimistic: 1
+      likely: 1
+      pessimistic: 1
+    required_capabilities:
+      - research
+    assignee: research
+    acceptance_criteria:
+      - brief.md is one page and restates the goal.
+    risk: low
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 40000
+      hours: 2
+      usd: 1
+    max_retries: 2
+    # planned, ready, in_progress, in_review, done, blocked, failed, cancelled.
+    # done is valid only after attest-done writes a pass from accuracy.
+    # The Planner records it with complete. Do not type done in here yourself.
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
+
+  - id: T2
+    title: Check the brief
+    section: Review
+    task_type: accuracy_review
+    objective: Check brief.md against the goal and write a pass or fail report.
+    inputs:
+      - artifact: brief.md
+        from_task: T1
+    outputs:
+      - artifact: review.md
+        type: markdown
+    depends_on:
+      - T1
+    estimate_hours:
+      optimistic: 0.5
+      likely: 0.5
+      pessimistic: 0.5
+    required_capabilities:
+      - verification
+    assignee: accuracy
+    acceptance_criteria:
+      - review.md says pass or fail.
+      - A fail names the line in brief.md that is wrong.
+    risk: low
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 30000
+      hours: 1
+      usd: 1
+    max_retries: 2
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
+
+  - id: M1
+    title: Approve the brief
+    section: Gate
+    task_type: human_approval
+    objective: Record a human decision of approve or hold on the checked brief.
+    inputs:
+      - artifact: review.md
+        from_task: T2
+    outputs:
+      - artifact: approval_record.md
+        type: markdown
+    depends_on:
+      - task: T2
+        type: FS
+        lag_hours: 0
+    # Zero optimistic, likely, and pessimistic marks a milestone.
+    estimate_hours:
+      optimistic: 0
+      likely: 0
+      pessimistic: 0
+    required_capabilities:
+      - human_approval
+    assignee: human
+    acceptance_criteria:
+      - approval_record.md says approve or hold, and names the person and the time.
+    risk: medium
+    reversible: true
+    # Irreversible work must set needs_human true (publishing, sending, deleting).
+    needs_human: true
+    budget:
+      tokens: 0
+      hours: 0
+      usd: 0
+    max_retries: 0
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0

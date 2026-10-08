@@ -1,0 +1,133 @@
+# yaml-language-server: $schema=../../schemas/plan.schema.json
+schema_version: 1
+plan_id: solo-feature-2026-10
+version: 1
+title: Ship a small feature
+goal: >
+  Land one feature behind a review and a human merge gate.
+owner: orchestrator
+definition_of_done: >
+  review.md records a pass, and merge_approval.md records the merge decision.
+budget:
+  tokens: 100000
+  hours: 4
+  usd: 10
+human_approval_policy: >
+  Merging to the default branch needs a person. Other work continues while that gate is open. The safe default is hold.
+constraints:
+  deadline: "2026-10-10T17:00:00-05:00"
+  max_parallel: 3
+  schedule_origin: "2026-10-08T09:00:00-05:00"
+deliverables:
+  - merge_approval.md
+tasks:
+  - id: T1
+    title: Implement the feature
+    section: Build
+    task_type: coding
+    objective: Write the feature and a short change note.
+    inputs: []
+    outputs:
+      - artifact: change_note.md
+        type: markdown
+    depends_on: []
+    estimate_hours:
+      optimistic: 1
+      likely: 2
+      pessimistic: 3
+    required_capabilities:
+      - coding
+    assignee: cloud-worker
+    acceptance_criteria:
+      - change_note.md names the behavior a reviewer can check.
+    risk: low
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 10000
+      hours: 4
+      usd: 0
+    max_retries: 1
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
+
+  - id: T2
+    title: Review the change
+    section: Review
+    task_type: accuracy_review
+    objective: Check the change note and write pass or fail.
+    inputs:
+      - artifact: change_note.md
+        from_task: T1
+    outputs:
+      - artifact: review.md
+        type: markdown
+    depends_on:
+      - T1
+    estimate_hours:
+      optimistic: 1
+      likely: 1
+      pessimistic: 1
+    required_capabilities:
+      - verification
+    assignee: accuracy
+    acceptance_criteria:
+      - review.md says pass or fail.
+      - A fail names the claim in change_note.md that is wrong.
+    risk: low
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 10000
+      hours: 4
+      usd: 0
+    max_retries: 1
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
+
+  - id: M1
+    title: Approve the merge
+    section: Gate
+    task_type: human_approval
+    objective: Record a human decision to merge or hold.
+    inputs:
+      - artifact: review.md
+        from_task: T2
+    outputs:
+      - artifact: merge_approval.md
+        type: markdown
+    depends_on:
+      - task: T2
+        type: FS
+        lag_hours: 0
+    estimate_hours:
+      optimistic: 0
+      likely: 0
+      pessimistic: 0
+    required_capabilities:
+      - human_approval
+    assignee: human
+    acceptance_criteria:
+      - merge_approval.md says merge or hold, and names the person and the time.
+    risk: medium
+    reversible: false
+    needs_human: true
+    budget:
+      tokens: 0
+      hours: 0
+      usd: 0
+    max_retries: 0
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0

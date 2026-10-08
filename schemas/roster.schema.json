@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/agent-planner/roster.schema.json",
+  "title": "Agent roster",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "default_max_parallel", "bots"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "default_max_parallel": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Fleet norm. Each plan still sets constraints.max_parallel."
+    },
+    "bots": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/bot" }
+    }
+  },
+  "$defs": {
+    "bot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "description", "capabilities", "capacity"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "capabilities": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "How many of this bot's tasks may run at once. Shared across plans by portfolio schedule."
+        },
+        "kind": {
+          "enum": ["bot", "cloud_agent", "human"],
+          "description": "Default bot. cloud_agent uses the same brief, artifact, and attest path."
+        },
+        "cost": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["usd_per_hour", "tokens_per_hour"],
+          "properties": {
+            "usd_per_hour": { "type": "number", "minimum": 0 },
+            "tokens_per_hour": { "type": "number", "minimum": 0 }
+          }
+        }
+      }
+    }
+  }
+}

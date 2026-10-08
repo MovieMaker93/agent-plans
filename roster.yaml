@@ -1,0 +1,92 @@
+# Agent roster. The Planner assigns tasks; the CLI only checks the assignment.
+# capacity is how many tasks that bot may run at the same time.
+# yaml-language-server: $schema=schemas/roster.schema.json
+schema_version: 1
+default_max_parallel: 3
+bots:
+  - name: orchestrator
+    description: First contact. Shapes the ask and dispatches work. Does not write plan.yaml.
+    capabilities:
+      - intake
+      - coordination
+      - dispatch
+    capacity: 2
+  - name: planner
+    description: Single writer of plan.yaml. Decomposes work, estimates, assigns, and replans.
+    capabilities:
+      - planning
+      - estimation
+      - scheduling
+    capacity: 1
+  - name: research
+    description: Finds facts, positioning, and sources, and writes research briefs.
+    capabilities:
+      - research
+      - synthesis
+    capacity: 1
+  - name: creative-director
+    description: Visual direction and image creation.
+    capabilities:
+      - visual_design
+      - image_generation
+    capacity: 1
+  - name: social
+    description: >
+      Long-form and social copy. Also posts after a human gate. This fleet
+      has no separate browser operator, so social holds browser_operation too.
+    capabilities:
+      - long_form_writing
+      - social_copy
+      - social_posting
+      - browser_operation
+    capacity: 1
+  - name: accuracy
+    description: Verifier. The only bot that may decide a task is done.
+    capabilities:
+      - verification
+      - fact_check
+    capacity: 2
+  - name: chief-of-staff
+    description: Packages deliverables, watches time and cost, and compiles escalations.
+    capabilities:
+      - packaging
+      - monitoring
+      - coordination
+    capacity: 1
+  - name: mastery
+    description: Turns logged actuals into better estimates and better instructions.
+    capabilities:
+      - calibration
+      - instruction_review
+    capacity: 1
+  - name: human
+    kind: human
+    description: Approval gates. Not a bot. Assign milestones that need a person here.
+    capabilities:
+      - human_approval
+    capacity: 1
+  - name: cloud-worker
+    kind: cloud_agent
+    description: >
+      Cursor cloud agent. Dispatch treats it like a named bot: same brief,
+      artifact manifest, and attestation path. capacity is how many of its
+      tasks may run at once. cost is the forecast rate, not a live bill.
+      coding is implementation work. gpu is a task that needs a GPU.
+    capabilities:
+      - research
+      - synthesis
+      - long_form_writing
+      - coding
+      - gpu
+    capacity: 2
+    cost:
+      usd_per_hour: 1.5
+      tokens_per_hour: 50000
+  - name: machine-pool
+    description: >
+      Generic shared pool of machines, one job per machine. capacity is how
+      many of those jobs may run at once. CPU work stays on the other roles.
+    capabilities:
+      - coding
+      - gpu
+    capacity: 4

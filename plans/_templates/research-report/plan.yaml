@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=../../../schemas/plan.schema.json
+# Instantiate with: python -m planner instantiate research-report --into plans/<slug> --plan-id <id>
+# One reversible task. No human gate. Set the goal, the deadline, and schedule_origin after the copy.
+# Add a later task with needs_human: true only when that step cannot be undone.
+schema_version: 1
+plan_id: template-research-report
+version: 1
+title: Research report
+template_kind: research-report
+priority: 0
+goal: Produce a sourced research report.
+owner: orchestrator
+definition_of_done: report.md answers the question and names its sources.
+budget:
+  tokens: 200000
+  hours: 4
+  usd: 8
+human_approval_policy: >
+  Research proceeds without a human gate. A person reads the finished report
+  outside this graph. Add a task with needs_human: true only when a step
+  cannot be undone.
+constraints:
+  deadline: "2026-10-16T17:00:00-05:00"
+  max_parallel: 1
+  schedule_origin: "2026-10-08T09:00:00-05:00"
+deliverables:
+  - report.md
+tasks:
+  - id: T1
+    title: Write the report
+    task_type: research
+    objective: Write report.md with the finding and the sources.
+    inputs: []
+    outputs:
+      - artifact: report.md
+        type: markdown
+    depends_on: []
+    estimate_hours:
+      optimistic: 1
+      likely: 2
+      pessimistic: 3
+    required_capabilities:
+      - research
+    assignee: research
+    acceptance_criteria:
+      - report.md answers the question and names its sources.
+    risk: low
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 120000
+      hours: 3
+      usd: 4
+    max_retries: 2
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0

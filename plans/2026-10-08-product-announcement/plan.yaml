@@ -1,0 +1,322 @@
+# yaml-language-server: $schema=../../schemas/plan.schema.json
+# Worked example: product announcement.
+# Task ids match the design doc, including the unused number T6.
+schema_version: 1
+plan_id: launch-announce-2026-10
+version: 2
+title: Product announcement plan
+goal: >
+  Publish a product announcement (blog post, 3 social posts, 2 images)
+  by 2026-10-09 17:00 CT.
+owner: orchestrator
+definition_of_done: >
+  The blog post and three social posts are live, both images are attached,
+  and published_urls.json lists URLs that resolve to the approved content.
+budget:
+  tokens: 2000000
+  hours: 8
+  usd: 25
+human_approval_policy: >
+  Publishing, deleting, sending external messages, changing the goal or the
+  deadline, and spending beyond this budget require a human. Gates are
+  milestones in this plan. While a gate is open, non-blocked work continues.
+  The safe default is hold.
+constraints:
+  deadline: "2026-10-09T17:00:00-05:00"
+  max_parallel: 3
+  schedule_origin: "2026-10-08T09:00:00-05:00"
+replan_policy:
+  min_interval_minutes: 60
+  hysteresis_hours: 0.5
+  freeze_window_hours: 1
+provided_inputs:
+  - artifact: brand_notes.md
+    description: Product facts supplied with the request.
+deliverables:
+  - published_urls.json
+tasks:
+  - id: T1
+    title: Research brief
+    section: Research
+    task_type: research
+    objective: Write a research brief covering facts, positioning, and competitors.
+    inputs:
+      - artifact: brand_notes.md
+    outputs:
+      - artifact: research_brief.md
+        type: markdown
+    depends_on: []
+    estimate_hours:
+      optimistic: 1
+      likely: 2
+      pessimistic: 3
+    required_capabilities:
+      - research
+    assignee: research
+    acceptance_criteria:
+      - Every factual claim names a source.
+      - The brief covers product facts, positioning, and at least two competitors.
+      - Facts taken from brand_notes.md cite that file.
+    risk: low
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 400000
+      hours: 3
+      usd: 4
+    max_retries: 2
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
+
+  - id: T2
+    title: Draft blog and social copy
+    section: Content
+    task_type: writing
+    objective: Write a 500 to 700 word blog post and 3 social posts from the research brief.
+    inputs:
+      - artifact: research_brief.md
+        from_task: T1
+    outputs:
+      - artifact: draft_copy.md
+        type: markdown
+    depends_on:
+      - task: T1
+        type: FS
+        lag_hours: 0
+    estimate_hours:
+      optimistic: 1
+      likely: 1.5
+      pessimistic: 2
+    required_capabilities:
+      - long_form_writing
+      - social_copy
+    assignee: social
+    acceptance_criteria:
+      - Every factual claim cites a line in research_brief.md.
+      - The blog post is 500 to 700 words.
+      - Each social post fits the platform character limit.
+    risk: medium
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 300000
+      hours: 2.5
+      usd: 3
+    max_retries: 2
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
+
+  - id: T3
+    title: Create two launch images
+    section: Content
+    task_type: image
+    objective: Create two launch images that match the research brief.
+    inputs:
+      - artifact: research_brief.md
+        from_task: T1
+    outputs:
+      - artifact: launch_image_1.png
+        type: png
+      - artifact: launch_image_2.png
+        type: png
+    depends_on:
+      - T1
+    estimate_hours:
+      optimistic: 1
+      likely: 2
+      pessimistic: 3
+    required_capabilities:
+      - image_generation
+    assignee: creative-director
+    acceptance_criteria:
+      - Exactly two images are produced.
+      - Each image illustrates a claim in research_brief.md.
+    risk: medium
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 500000
+      hours: 3.5
+      usd: 8
+    max_retries: 2
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
+
+  - id: T4
+    title: Accuracy review of copy
+    section: Review
+    task_type: accuracy_review
+    objective: Check every factual claim in the draft against the research brief.
+    inputs:
+      - artifact: draft_copy.md
+        from_task: T2
+      - artifact: research_brief.md
+        from_task: T1
+    outputs:
+      - artifact: accuracy_report.md
+        type: markdown
+    depends_on:
+      - T2
+    estimate_hours:
+      optimistic: 0.5
+      likely: 1
+      pessimistic: 1.5
+    required_capabilities:
+      - verification
+      - fact_check
+    assignee: accuracy
+    acceptance_criteria:
+      - Each factual claim in draft_copy.md is checked against research_brief.md.
+      - The report says pass or fail, with a line reference for every failure.
+    risk: medium
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 250000
+      hours: 2
+      usd: 3
+    max_retries: 2
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
+
+  - id: T5
+    title: Assemble launch package
+    section: Review
+    task_type: packaging
+    objective: Bundle the approved copy and both images into one launch package.
+    inputs:
+      - artifact: launch_image_1.png
+        from_task: T3
+      - artifact: launch_image_2.png
+        from_task: T3
+      - artifact: accuracy_report.md
+        from_task: T4
+      - artifact: draft_copy.md
+        from_task: T2
+    outputs:
+      - artifact: launch_package.zip
+        type: zip
+    depends_on:
+      - T3
+      - T4
+    estimate_hours:
+      optimistic: 0.25
+      likely: 0.5
+      pessimistic: 0.75
+    required_capabilities:
+      - packaging
+    assignee: chief-of-staff
+    acceptance_criteria:
+      - launch_package.zip contains draft_copy.md, both images, and accuracy_report.md.
+      - accuracy_report.md says pass.
+    risk: low
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 150000
+      hours: 1
+      usd: 2
+    max_retries: 2
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
+
+  - id: M1
+    title: Human approval
+    section: Gate and publish
+    task_type: human_approval
+    objective: Record the human decision to approve the launch package or to hold.
+    inputs:
+      - artifact: launch_package.zip
+        from_task: T5
+    outputs:
+      - artifact: approval_record.md
+        type: markdown
+    depends_on:
+      - T5
+    estimate_hours:
+      optimistic: 0
+      likely: 0
+      pessimistic: 0
+    required_capabilities:
+      - human_approval
+    assignee: human
+    acceptance_criteria:
+      - approval_record.md says approve or hold.
+      - It names the person and the decision time.
+    risk: high
+    reversible: true
+    needs_human: true
+    budget:
+      tokens: 0
+      hours: 0
+      usd: 0
+    max_retries: 0
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
+
+  - id: T7
+    title: Publish
+    section: Gate and publish
+    task_type: publish
+    objective: Publish the approved copy and images to the blog and social accounts.
+    inputs:
+      - artifact: launch_package.zip
+        from_task: T5
+      - artifact: approval_record.md
+        from_task: M1
+    outputs:
+      - artifact: published_urls.json
+        type: json
+    depends_on:
+      - T5
+      - M1
+    estimate_hours:
+      optimistic: 0.25
+      likely: 0.5
+      pessimistic: 0.75
+    required_capabilities:
+      - browser_operation
+      - social_posting
+    assignee: social
+    acceptance_criteria:
+      - published_urls.json lists the blog URL and three social URLs.
+      - Each URL resolves and matches the approved package.
+      - Nothing is posted unless approval_record.md says approve.
+    risk: high
+    reversible: false
+    needs_human: true
+    budget:
+      tokens: 100000
+      hours: 1
+      usd: 1
+    max_retries: 1
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0

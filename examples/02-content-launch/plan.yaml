@@ -1,0 +1,211 @@
+# yaml-language-server: $schema=../../schemas/plan.schema.json
+schema_version: 1
+plan_id: content-launch-2026-10
+version: 1
+title: Multi-agent content launch
+goal: >
+  Publish a short announcement after research, writing, design, Accuracy review, and a human approval.
+owner: orchestrator
+definition_of_done: >
+  review.md says pass, and publish_approval.md records the human decision to publish.
+budget:
+  tokens: 100000
+  hours: 8
+  usd: 10
+human_approval_policy: >
+  Publishing is irreversible and needs a person. Research, writing, and design continue while a gate they do not depend on is open. The safe default is hold.
+constraints:
+  deadline: "2026-10-10T17:00:00-05:00"
+  max_parallel: 3
+  schedule_origin: "2026-10-08T09:00:00-05:00"
+deliverables:
+  - publish_approval.md
+tasks:
+  - id: T1
+    title: Research the announcement
+    section: Research
+    task_type: research
+    objective: Write the facts and the positioning for the announcement.
+    inputs: []
+    outputs:
+      - artifact: research_brief.md
+        type: markdown
+    depends_on: []
+    estimate_hours:
+      optimistic: 2
+      likely: 2
+      pessimistic: 2
+    required_capabilities:
+      - research
+    assignee: research
+    acceptance_criteria:
+      - research_brief.md names the audience and at least two facts.
+    risk: low
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 10000
+      hours: 4
+      usd: 0
+    max_retries: 1
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
+
+  - id: T2
+    title: Write the announcement
+    section: Writing
+    task_type: writing
+    objective: Draft the announcement from the research brief.
+    inputs:
+      - artifact: research_brief.md
+        from_task: T1
+    outputs:
+      - artifact: announcement.md
+        type: markdown
+    depends_on:
+      - T1
+    estimate_hours:
+      optimistic: 2
+      likely: 2
+      pessimistic: 2
+    required_capabilities:
+      - long_form_writing
+    assignee: social
+    acceptance_criteria:
+      - announcement.md is a complete draft and cites research_brief.md.
+    risk: low
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 10000
+      hours: 4
+      usd: 0
+    max_retries: 1
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
+
+  - id: T3
+    title: Design the image
+    section: Design
+    task_type: visual_design
+    objective: Make one image that matches the announcement.
+    inputs:
+      - artifact: announcement.md
+        from_task: T2
+    outputs:
+      - artifact: hero.png
+        type: image
+    depends_on:
+      - T2
+    estimate_hours:
+      optimistic: 1
+      likely: 1
+      pessimistic: 1
+    required_capabilities:
+      - visual_design
+    assignee: creative-director
+    acceptance_criteria:
+      - hero.png matches the subject of announcement.md.
+    risk: low
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 10000
+      hours: 4
+      usd: 0
+    max_retries: 1
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
+
+  - id: T4
+    title: Check the package
+    section: Review
+    task_type: accuracy_review
+    objective: Check the draft and the image against the research brief.
+    inputs:
+      - artifact: research_brief.md
+        from_task: T1
+      - artifact: announcement.md
+        from_task: T2
+      - artifact: hero.png
+        from_task: T3
+    outputs:
+      - artifact: review.md
+        type: markdown
+    depends_on:
+      - T3
+    estimate_hours:
+      optimistic: 1
+      likely: 1
+      pessimistic: 1
+    required_capabilities:
+      - verification
+    assignee: accuracy
+    acceptance_criteria:
+      - review.md says pass or fail.
+      - A fail names the claim that is wrong.
+    risk: low
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 10000
+      hours: 4
+      usd: 0
+    max_retries: 1
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
+
+  - id: M1
+    title: Approve publication
+    section: Gate
+    task_type: human_approval
+    objective: Record a human decision to publish or hold.
+    inputs:
+      - artifact: review.md
+        from_task: T4
+    outputs:
+      - artifact: publish_approval.md
+        type: markdown
+    depends_on:
+      - task: T4
+        type: FS
+        lag_hours: 0
+    estimate_hours:
+      optimistic: 0
+      likely: 0
+      pessimistic: 0
+    required_capabilities:
+      - human_approval
+    assignee: human
+    acceptance_criteria:
+      - publish_approval.md says publish or hold, and names the person and the time.
+    risk: medium
+    reversible: false
+    needs_human: true
+    budget:
+      tokens: 0
+      hours: 0
+      usd: 0
+    max_retries: 0
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0

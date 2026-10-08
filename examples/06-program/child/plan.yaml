@@ -1,0 +1,93 @@
+# yaml-language-server: $schema=../../../schemas/plan.schema.json
+schema_version: 1
+plan_id: study-child-2026-10
+version: 1
+title: Study notes
+goal: >
+  Write and check a short study note. This plan is rolled up by a parent task.
+owner: orchestrator
+definition_of_done: >
+  checked_note.md says pass or fail.
+budget:
+  tokens: 100000
+  hours: 4
+  usd: 10
+human_approval_policy: >
+  No irreversible step. The parent plan owns the release gate.
+constraints:
+  deadline: "2026-10-10T17:00:00-05:00"
+  max_parallel: 2
+  schedule_origin: "2026-10-08T09:00:00-05:00"
+deliverables:
+  - checked_note.md
+tasks:
+  - id: C1
+    title: Draft the note
+    section: Study
+    task_type: research
+    objective: Write the study note.
+    inputs: []
+    outputs:
+      - artifact: study_note.md
+        type: markdown
+    depends_on: []
+    estimate_hours:
+      optimistic: 2
+      likely: 2
+      pessimistic: 2
+    required_capabilities:
+      - research
+    assignee: research
+    acceptance_criteria:
+      - study_note.md states the question and the finding.
+    risk: low
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 10000
+      hours: 4
+      usd: 0
+    max_retries: 1
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
+
+  - id: C2
+    title: Check the note
+    section: Study
+    task_type: accuracy_review
+    objective: Check the study note.
+    inputs:
+      - artifact: study_note.md
+        from_task: C1
+    outputs:
+      - artifact: checked_note.md
+        type: markdown
+    depends_on:
+      - C1
+    estimate_hours:
+      optimistic: 1
+      likely: 1
+      pessimistic: 1
+    required_capabilities:
+      - verification
+    assignee: accuracy
+    acceptance_criteria:
+      - checked_note.md says pass or fail.
+    risk: low
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 10000
+      hours: 4
+      usd: 0
+    max_retries: 1
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0

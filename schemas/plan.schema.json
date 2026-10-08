@@ -1,0 +1,301 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/agent-planner/plan.schema.json",
+  "title": "Agent project plan",
+  "description": "Task graph for one project. The Python validator in planner/validate.py is what CI runs. This schema is the editor contract and matches that validator.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "plan_id",
+    "version",
+    "goal",
+    "owner",
+    "definition_of_done",
+    "budget",
+    "human_approval_policy",
+    "constraints",
+    "deliverables",
+    "tasks"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "plan_id": { "type": "string", "minLength": 1 },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Bump on every change to this file, including status-only edits."
+    },
+    "title": { "type": "string", "minLength": 1 },
+    "goal": { "type": "string", "minLength": 1 },
+    "owner": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Roster name of the bot that owns the request. Usually orchestrator."
+    },
+    "definition_of_done": { "type": "string", "minLength": 1 },
+    "budget": { "$ref": "#/$defs/budget" },
+    "human_approval_policy": { "type": "string", "minLength": 1 },
+    "constraints": { "$ref": "#/$defs/constraints" },
+    "replan_policy": { "$ref": "#/$defs/replan_policy" },
+    "priority": {
+      "type": "integer",
+      "description": "Higher schedules first when portfolio schedule shares one roster. Default 0."
+    },
+    "template_kind": {
+      "type": "string",
+      "minLength": 1,
+      "description": "plans/_templates/<kind> this plan was instantiated from. Calibration can attach by this name."
+    },
+    "calibration_override": { "$ref": "#/$defs/calibration_override" },
+    "provided_inputs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/provided_input" }
+    },
+    "deliverables": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Final artifact names. Every other output must be an input of a downstream task."
+    },
+    "tasks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/task" }
+    }
+  },
+  "$defs": {
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tokens", "hours", "usd"],
+      "properties": {
+        "tokens": { "type": "integer", "minimum": 0 },
+        "hours": { "type": "number", "minimum": 0 },
+        "usd": { "type": "number", "minimum": 0 }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_parallel", "schedule_origin"],
+      "properties": {
+        "deadline": { "type": "string", "minLength": 1 },
+        "max_parallel": { "type": "integer", "minimum": 1 },
+        "schedule_origin": {
+          "type": "string",
+          "minLength": 1,
+          "description": "ISO-8601 datetime. Schedule times are hours after this instant."
+        }
+      }
+    },
+    "provided_input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact"],
+      "properties": {
+        "artifact": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" }
+      }
+    },
+    "replan_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Defaults if omitted: min_interval_minutes 60, hysteresis_hours 0.5, freeze_window_hours 1.",
+      "properties": {
+        "min_interval_minutes": { "type": "integer", "minimum": 0 },
+        "hysteresis_hours": { "type": "number", "minimum": 0 },
+        "freeze_window_hours": { "type": "number", "minimum": 0 }
+      }
+    },
+    "estimate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["optimistic", "likely", "pessimistic"],
+      "description": "PERT hours. expected = (optimistic + 4*likely + pessimistic) / 6. calibrated is the scheduling duration written by apply-calibration. It does not replace optimistic, likely, or pessimistic.",
+      "properties": {
+        "optimistic": { "type": "number", "minimum": 0 },
+        "likely": { "type": "number", "minimum": 0 },
+        "pessimistic": { "type": "number", "minimum": 0 },
+        "calibrated": { "type": "number", "minimum": 0 }
+      }
+    },
+    "actuals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end", "hours", "attempts"],
+      "properties": {
+        "start": { "type": ["string", "null"] },
+        "end": { "type": ["string", "null"] },
+        "hours": { "type": ["number", "null"], "minimum": 0 },
+        "attempts": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "artifact_in": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact"],
+      "properties": {
+        "artifact": { "type": "string", "minLength": 1 },
+        "from_task": { "type": "string", "minLength": 1 }
+      }
+    },
+    "artifact_out": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact", "type"],
+      "properties": {
+        "artifact": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 }
+      }
+    },
+    "dependency": {
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["task"],
+          "properties": {
+            "task": { "type": "string", "minLength": 1 },
+            "type": {
+              "enum": ["FS", "SS", "FF", "SF"],
+              "description": "Finish-to-start, start-to-start, finish-to-finish, start-to-finish. Default FS."
+            },
+            "lag_hours": { "type": "number" }
+          }
+        }
+      ]
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "task_type",
+        "objective",
+        "inputs",
+        "outputs",
+        "depends_on",
+        "estimate_hours",
+        "required_capabilities",
+        "assignee",
+        "acceptance_criteria",
+        "risk",
+        "reversible",
+        "needs_human",
+        "budget",
+        "max_retries",
+        "status",
+        "actuals"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]*$" },
+        "title": { "type": "string", "minLength": 1 },
+        "section": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Gantt row group. Defaults to the assignee."
+        },
+        "task_type": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable name used by calibrate, such as research or accuracy_review."
+        },
+        "objective": { "type": "string", "minLength": 1 },
+        "inputs": { "type": "array", "items": { "$ref": "#/$defs/artifact_in" } },
+        "outputs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/artifact_out" }
+        },
+        "depends_on": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/dependency" }
+        },
+        "estimate_hours": { "$ref": "#/$defs/estimate" },
+        "required_capabilities": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "assignee": { "type": "string", "minLength": 1 },
+        "acceptance_criteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "risk": { "enum": ["low", "medium", "high"] },
+        "reversible": { "type": "boolean" },
+        "needs_human": { "type": "boolean" },
+        "budget": { "$ref": "#/$defs/budget" },
+        "max_retries": { "type": "integer", "minimum": 0 },
+        "status": {
+          "enum": [
+            "planned",
+            "ready",
+            "in_progress",
+            "in_review",
+            "done",
+            "blocked",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "actuals": { "$ref": "#/$defs/actuals" },
+        "subplan": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Relative path plans/<directory>. Parent duration and displayed status roll up from that plan. plan.yaml status is not rewritten."
+        }
+      }
+    },
+    "calibration_override": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Checked before calibration.yaml. Order: pair, task_type, assignee, blanket factor.",
+      "properties": {
+        "factor": { "type": "number", "exclusiveMinimum": 0 },
+        "by_pair": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["assignee", "task_type", "factor"],
+            "properties": {
+              "assignee": { "type": "string", "minLength": 1 },
+              "task_type": { "type": "string", "minLength": 1 },
+              "factor": { "type": "number", "exclusiveMinimum": 0 }
+            }
+          }
+        },
+        "by_task_type": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["task_type", "factor"],
+            "properties": {
+              "task_type": { "type": "string", "minLength": 1 },
+              "factor": { "type": "number", "exclusiveMinimum": 0 }
+            }
+          }
+        },
+        "by_assignee": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["assignee", "factor"],
+            "properties": {
+              "assignee": { "type": "string", "minLength": 1 },
+              "factor": { "type": "number", "exclusiveMinimum": 0 }
+            }
+          }
+        }
+      }
+    }
+  }
+}
