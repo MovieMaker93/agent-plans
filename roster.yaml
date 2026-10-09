@@ -1,23 +1,161 @@
 # Agent roster. The Planner assigns tasks; the CLI only checks the assignment.
 # capacity is how many tasks that bot may run at the same time.
+#
+# Role mapping for this fork:
+# - orchestrator and planner stay dedicated seats. Agent planner Searcher
+#   staffs both. The names stay because upstream plans set owner: orchestrator
+#   and the contract keeps "shapes the ask" separate from "writes plan.yaml".
+#   The same bot is also listed as agent-planner-searcher for general work.
+# - accuracy stays a dedicated verifier. attest-done records reviewer accuracy,
+#   and none of the owner's bots is a verifier.
+# - human stays the approval seat for irreversible gates.
+# - The "Upstream example roles" block is the original fleet. examples/ and
+#   plans/2026-10-08-product-announcement still assign those names.
 # yaml-language-server: $schema=schemas/roster.schema.json
 schema_version: 1
 default_max_parallel: 3
 bots:
   - name: orchestrator
-    description: First contact. Shapes the ask and dispatches work. Does not write plan.yaml.
+    description: >
+      First contact. Shapes the ask and dispatches work. Does not write
+      plan.yaml. This seat is staffed by Agent planner Searcher.
     capabilities:
       - intake
       - coordination
       - dispatch
     capacity: 2
   - name: planner
-    description: Single writer of plan.yaml. Decomposes work, estimates, assigns, and replans.
+    description: >
+      Single writer of plan.yaml. Decomposes work, estimates, assigns, and
+      replans. This seat is staffed by Agent planner Searcher. It is a
+      separate roster name so the orchestrator still does not write the plan.
     capabilities:
       - planning
       - estimation
       - scheduling
     capacity: 1
+  - name: accuracy
+    description: >
+      Verifier. The only bot that may decide a task is done. Kept as its own
+      seat because attest-done requires reviewer accuracy. No owner bot fills
+      this role.
+    capabilities:
+      - verification
+      - fact_check
+    capacity: 2
+  - name: human
+    kind: human
+    description: Approval gates. Not a bot. Assign milestones that need a person here.
+    capabilities:
+      - human_approval
+    capacity: 1
+
+  # Owner's fleet. Names are the kebab-case ids plans assign.
+  - name: agent-planner-searcher
+    description: >
+      General assistant. Same person as the orchestrator and planner seats:
+      shapes asks, drafts plans, and picks up research that has no specialist.
+    capabilities:
+      - intake
+      - coordination
+      - dispatch
+      - planning
+      - estimation
+      - scheduling
+      - research
+      - synthesis
+    capacity: 2
+  - name: grok-bot
+    description: General teammate for research, writing, and coordination when no specialist owns the task.
+    capabilities:
+      - research
+      - synthesis
+      - long_form_writing
+      - coordination
+    capacity: 2
+  - name: job-hunter
+    description: >
+      Finds DevSecOps, Kubernetes, platform, and cloud engineering roles in
+      Switzerland and screens them against the permit and salary floor.
+    capabilities:
+      - job_search
+      - role_screening
+    capacity: 1
+  - name: tailor
+    description: Rewrites the CV and cover letter for one specific posting. One tailoring job at a time.
+    capabilities:
+      - cv_writing
+      - cover_letter
+    capacity: 1
+  - name: searcher
+    description: General research. Company briefs, sources, and synthesis.
+    capabilities:
+      - research
+      - synthesis
+      - company_research
+    capacity: 2
+  - name: news-hunter
+    description: Monitors news for companies, markets, and topics the team is already tracking.
+    capabilities:
+      - news_monitoring
+      - research
+    capacity: 2
+  - name: email-checker
+    description: Triages the inbox and summarizes what needs a reply. Does not send mail.
+    capabilities:
+      - inbox_triage
+      - email_summary
+    capacity: 1
+  - name: github-jedi
+    description: GitHub work. Issues, pull requests, and code review.
+    capabilities:
+      - coding
+      - github
+      - code_review
+    capacity: 2
+  - name: sniper
+    description: Watches a named hardware target and flags a listing that hits the target price.
+    capabilities:
+      - deal_watching
+      - price_tracking
+    capacity: 1
+  - name: prices-hunter
+    description: >
+      Compares hardware prices across retailers. Broader than sniper, which
+      watches one target. The display name is PRices Hunter.
+    capabilities:
+      - price_tracking
+      - comparison_shopping
+      - deal_watching
+    capacity: 2
+  - name: chat-hunter-x
+    description: Watches X (Twitter) for posts the team asked it to follow.
+    capabilities:
+      - x_monitoring
+      - social_research
+    capacity: 1
+  - name: youtube-summarized
+    description: Summarizes YouTube videos into a short note with the claims and the timestamps.
+    capabilities:
+      - video_summary
+      - synthesis
+    capacity: 2
+  - name: locally
+    description: Plans and reviews coding jobs that a local model will run.
+    capabilities:
+      - coding
+      - local_planning
+      - code_review
+    capacity: 1
+  - name: dr-eggbot
+    description: Designs new bots. Writes the role, the capabilities, and the instructions. Display name is dr eggbot.
+    capabilities:
+      - bot_design
+      - instruction_review
+    capacity: 1
+
+  # Upstream example roles. Kept so examples/ and the product-announcement
+  # plan still validate. Not part of the owner's fleet.
   - name: research
     description: Finds facts, positioning, and sources, and writes research briefs.
     capabilities:
@@ -40,12 +178,6 @@ bots:
       - social_posting
       - browser_operation
     capacity: 1
-  - name: accuracy
-    description: Verifier. The only bot that may decide a task is done.
-    capabilities:
-      - verification
-      - fact_check
-    capacity: 2
   - name: chief-of-staff
     description: Packages deliverables, watches time and cost, and compiles escalations.
     capabilities:
@@ -58,12 +190,6 @@ bots:
     capabilities:
       - calibration
       - instruction_review
-    capacity: 1
-  - name: human
-    kind: human
-    description: Approval gates. Not a bot. Assign milestones that need a person here.
-    capabilities:
-      - human_approval
     capacity: 1
   - name: cloud-worker
     kind: cloud_agent
