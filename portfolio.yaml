@@ -3,9 +3,9 @@
 schema_version: 1
 kind: portfolio
 schedule: origin
-plans_count: 1
+plans_count: 2
 tasks_done: 0
-tasks_active: 7
+tasks_active: 13
 blocked: 0
 awaiting_human: 0
 failed: 0
@@ -61,6 +61,60 @@ plans:
     forecast_hour_ratio: 0.9375
     forecast_warnings:
       - hours
+    forecast_hold: false
+    forecast_tokens: null
+    forecast_usd: null
+    subplans: []
+  - plan_id: swiss-job-search-2026-10
+    directory: "plans/2026-10-12-swiss-job-search"
+    version: 1
+    progress_done: 0
+    progress_active: 6
+    progress_percent: "0.0"
+    critical_path:
+      - T1
+      - T2
+      - T3
+      - T4
+      - M1
+      - T5
+    critical_path_residual:
+      - T1
+      - T2
+      - T3
+      - T4
+      - M1
+      - T5
+    critical_residual_hours: 34
+    makespan_hours: 34
+    projected_finish: "2026-10-13T19:00:00+02:00"
+    deadline: "2026-11-09T17:00:00+01:00"
+    deadline_slack_hours: 647
+    schedule_variance:
+      samples: 0
+      actual_hours: null
+      expected_hours: null
+      pooled_ratio: null
+    budget_hours: 60
+    actual_hours: 0
+    budget_burn: 0
+    estimate_error: null
+    blocked: []
+    awaiting_human: []
+    failed: []
+    status_counts:
+      planned: 6
+      ready: 0
+      in_progress: 0
+      in_review: 0
+      done: 0
+      blocked: 0
+      failed: 0
+      cancelled: 0
+    priority: 1
+    forecast_hours: 34
+    forecast_hour_ratio: 0.5667
+    forecast_warnings: []
     forecast_hold: false
     forecast_tokens: null
     forecast_usd: null

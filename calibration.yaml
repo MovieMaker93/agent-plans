@@ -14,6 +14,7 @@ skipped_zero_likely: 0
 as_of: null
 source_plans:
   - launch-announce-2026-10
+  - swiss-job-search-2026-10
 overall:
   n: 0
   raw_ratio: null

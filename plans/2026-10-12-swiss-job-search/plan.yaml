@@ -1,0 +1,315 @@
+# yaml-language-server: $schema=../../schemas/plan.schema.json
+# Custom graph. research-report has no human gate. announcement is a publish
+# graph. Neither fits a search that must stop before an irreversible application.
+schema_version: 1
+plan_id: swiss-job-search-2026-10
+version: 1
+title: Swiss DevSecOps job search
+priority: 1
+goal: >
+  Find Swiss DevSecOps, Kubernetes, platform, and cloud engineering roles
+  that fit a Swiss B work permit and a minimum salary of CHF 120000 per year,
+  research each employer, tailor a CV and cover letter per role, verify each
+  tailored CV against the posting, and submit an application only after a
+  person approves that role.
+owner: orchestrator
+definition_of_done: >
+  role_shortlist.md, company_briefs.md, and tailored_applications.md exist.
+  cv_match_report.md records pass or fail for each role. approval_record.md
+  records a person's decision. application_record.md shows a receipt only for
+  roles that person approved, and shows that no other role was submitted.
+budget:
+  tokens: 1200000
+  hours: 60
+  usd: 0
+human_approval_policy: >
+  Submitting an application is irreversible and needs a person. While that
+  gate is open, do not apply. The safe default is hold. Changing the salary
+  floor, the permit constraint, the role focus, the goal, or the deadline
+  also needs a person.
+constraints:
+  deadline: "2026-11-09T17:00:00+01:00"
+  max_parallel: 2
+  schedule_origin: "2026-10-12T09:00:00+02:00"
+provided_inputs:
+  - artifact: candidate_profile.md
+    description: >
+      Baseline CV, Swiss B work permit, minimum salary CHF 120000 per year,
+      and the DevSecOps, Kubernetes, platform, and cloud engineering focus.
+deliverables:
+  - role_shortlist.md
+  - company_briefs.md
+  - tailored_applications.md
+  - cv_match_report.md
+  - approval_record.md
+  - application_record.md
+tasks:
+  - id: T1
+    title: Find matching Swiss roles
+    section: Search
+    task_type: job_search
+    objective: >
+      Search for DevSecOps, Kubernetes, platform, and cloud engineering roles
+      in Switzerland. Drop anything below CHF 120000 per year. Keep roles
+      with no published salary only when they are marked salary unknown.
+      Note that the candidate holds a Swiss B work permit. The likely
+      estimate is one pass of about six roles.
+    inputs:
+      - artifact: candidate_profile.md
+    outputs:
+      - artifact: role_shortlist.md
+        type: markdown
+    depends_on: []
+    estimate_hours:
+      optimistic: 4
+      likely: 6
+      pessimistic: 14
+    required_capabilities:
+      - job_search
+    assignee: job-hunter
+    acceptance_criteria:
+      - role_shortlist.md lists only roles based in Switzerland or roles that hire in Switzerland.
+      - Every role is DevSecOps, Kubernetes, platform engineering, or cloud engineering.
+      - Every role with a published salary is at least CHF 120000 per year.
+      - Roles with no published salary are marked salary unknown.
+      - The shortlist notes that the candidate holds a Swiss B work permit.
+    risk: medium
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 250000
+      hours: 16
+      usd: 0
+    max_retries: 2
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
+
+  - id: T2
+    title: Research each company
+    section: Research
+    task_type: research
+    objective: >
+      Write a short brief for each employer on the shortlist. Cover what the
+      company does, where the role sits, and one source for each claim.
+    inputs:
+      - artifact: role_shortlist.md
+        from_task: T1
+    outputs:
+      - artifact: company_briefs.md
+        type: markdown
+    depends_on:
+      - T1
+    estimate_hours:
+      optimistic: 6
+      likely: 8
+      pessimistic: 16
+    required_capabilities:
+      - research
+    assignee: searcher
+    acceptance_criteria:
+      - company_briefs.md has one section per employer in role_shortlist.md.
+      - Each section says what the company does and where the role sits.
+      - Each factual claim names a source.
+    risk: low
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 300000
+      hours: 18
+      usd: 0
+    max_retries: 2
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
+
+  - id: T3
+    title: Tailor CV and cover letter
+    section: Applications
+    task_type: cv_tailoring
+    objective: >
+      For each role on the shortlist, rewrite the CV and write a cover letter
+      aimed at that posting and that company brief. Do not invent experience
+      that candidate_profile.md does not support. The likely estimate is about
+      two hours per role for a shortlist of about six.
+    inputs:
+      - artifact: candidate_profile.md
+      - artifact: role_shortlist.md
+        from_task: T1
+      - artifact: company_briefs.md
+        from_task: T2
+    outputs:
+      - artifact: tailored_applications.md
+        type: markdown
+    depends_on:
+      - T1
+      - T2
+    estimate_hours:
+      optimistic: 8
+      likely: 12
+      pessimistic: 16
+    required_capabilities:
+      - cv_writing
+      - cover_letter
+    assignee: tailor
+    acceptance_criteria:
+      - tailored_applications.md contains one CV and one cover letter for each role in role_shortlist.md.
+      - Each CV and cover letter names the employer and the role title from role_shortlist.md.
+      - The cover letter states the Swiss B work permit.
+      - No letter claims a salary below CHF 120000 per year.
+    risk: medium
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 400000
+      hours: 20
+      usd: 0
+    max_retries: 2
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
+
+  - id: T4
+    title: Verify CV matches the posting
+    section: Review
+    task_type: accuracy_review
+    objective: >
+      Check each tailored CV and cover letter against the matching posting
+      and against candidate_profile.md. Fail a role when a claim is missing
+      from the profile or the CV does not address the posting.
+    inputs:
+      - artifact: tailored_applications.md
+        from_task: T3
+      - artifact: role_shortlist.md
+        from_task: T1
+      - artifact: candidate_profile.md
+    outputs:
+      - artifact: cv_match_report.md
+        type: markdown
+    depends_on:
+      - T3
+    estimate_hours:
+      optimistic: 2
+      likely: 4
+      pessimistic: 6
+    required_capabilities:
+      - verification
+      - fact_check
+    assignee: accuracy
+    acceptance_criteria:
+      - cv_match_report.md checks each tailored CV against the matching posting in role_shortlist.md.
+      - The report says pass or fail for each role.
+      - Every failure has a line reference.
+      - A pass means the CV and cover letter are supported by candidate_profile.md and address the posting.
+    risk: medium
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 150000
+      hours: 8
+      usd: 0
+    max_retries: 2
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
+
+  - id: M1
+    title: Approve applications
+    section: Gate
+    task_type: human_approval
+    objective: >
+      Record the human decision to approve or hold each role. Do not approve
+      a role whose cv_match_report.md says fail. Holding is the safe default.
+    inputs:
+      - artifact: cv_match_report.md
+        from_task: T4
+      - artifact: tailored_applications.md
+        from_task: T3
+    outputs:
+      - artifact: approval_record.md
+        type: markdown
+    depends_on:
+      - T4
+    estimate_hours:
+      optimistic: 0
+      likely: 0
+      pessimistic: 0
+    required_capabilities:
+      - human_approval
+    assignee: human
+    acceptance_criteria:
+      - approval_record.md says approve or hold for each role.
+      - It names the person and the decision time.
+      - It does not approve a role whose cv_match_report.md says fail.
+    risk: high
+    reversible: true
+    needs_human: true
+    budget:
+      tokens: 0
+      hours: 0
+      usd: 0
+    max_retries: 0
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
+
+  - id: T5
+    title: Submit approved applications
+    section: Gate
+    task_type: application_submit
+    objective: >
+      Submit an application only for roles approval_record.md marks approve.
+      Record a receipt for each submission. Submit nothing when the record
+      says hold. This step cannot be undone.
+    inputs:
+      - artifact: approval_record.md
+        from_task: M1
+      - artifact: cv_match_report.md
+        from_task: T4
+      - artifact: tailored_applications.md
+        from_task: T3
+    outputs:
+      - artifact: application_record.md
+        type: markdown
+    depends_on:
+      - M1
+    estimate_hours:
+      optimistic: 1
+      likely: 2
+      pessimistic: 3
+    required_capabilities:
+      - human_approval
+    assignee: human
+    acceptance_criteria:
+      - application_record.md lists a receipt for every role approval_record.md marks approve, and no others.
+      - Nothing is submitted for a role marked hold.
+      - Each submitted role had a pass in cv_match_report.md.
+    risk: high
+    reversible: false
+    needs_human: true
+    budget:
+      tokens: 20000
+      hours: 4
+      usd: 0
+    max_retries: 1
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
