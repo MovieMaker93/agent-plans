@@ -10,8 +10,8 @@ cache:
   key:
     files:
       - requirements.txt
-    paths:
-      - .cache/pip
+  paths:
+    - .cache/pip
 
 planner-check:
   stage: test

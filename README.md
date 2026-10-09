@@ -72,10 +72,10 @@ python3 -m planner check
 
 That validates every plan under `plans/` (or under `AGENT_PLANS_DIR` when it is set), including the template library, and runs the unit tests. The unit-test half clears `AGENT_PLANS_DIR` so snapshot comparisons stay on this checkout. It does not check this repository's commit history.
 
-`scripts/check_commit_hygiene.py` checks maintainer commits on `main` when you invoke it. Before pushing that history:
+`scripts/check_commit_hygiene.py` checks commits reachable from HEAD, or every ref with `--all` (`refs/stash` is skipped). Only the name rule is limited to `main`. Before pushing that history:
 
 ```bash
-python scripts/check_commit_hygiene.py --all && gitleaks detect
+python scripts/check_commit_hygiene.py --all && gitleaks git
 ```
 
 ## License

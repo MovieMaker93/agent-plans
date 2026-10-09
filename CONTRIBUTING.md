@@ -38,7 +38,7 @@ The identity rule applies to maintainer commits on `main`. Those commits use the
 `scripts/check_commit_hygiene.py` runs when you invoke it. It is not part of `python3 -m planner check`. The GitLab CI file runs it only on GitLab, in its own job, on the default branch and on tags. Before a maintainer pushes `main`:
 
 ```bash
-python scripts/check_commit_hygiene.py --all && gitleaks detect
+python scripts/check_commit_hygiene.py --all && gitleaks git
 ```
 
 ## Secrets

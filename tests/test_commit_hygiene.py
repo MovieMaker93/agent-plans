@@ -17,7 +17,7 @@ from scripts.check_commit_hygiene import ALLOWED_EMAIL, DEFAULT_NAME, main, prob
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "check_commit_hygiene.py"
-GMAIL = "someone@gmail.com"
+FOREIGN = "someone@example.org"
 
 
 @unittest.skipUnless(shutil.which("git"), "git not installed")
@@ -113,34 +113,57 @@ class CommitHygieneTests(unittest.TestCase):
             self.assertTrue(any("forbidden trailer" in item for item in found), found)
             self.assertEqual(self._main(repo), 1)
 
-    def test_gmail_in_the_body_or_another_trailer_is_rejected(self) -> None:
+    def test_foreign_address_in_the_body_or_another_trailer_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = self._repo(Path(tmp))
             self._commit(
                 repo,
-                f"the note mentions {GMAIL} in prose",
+                f"the note mentions {FOREIGN} in prose",
                 author=ALLOWED_EMAIL,
                 committer=ALLOWED_EMAIL,
             )
             body = problems(repo)
-            self.assertTrue(any(GMAIL in item for item in body), body)
+            self.assertTrue(any(FOREIGN in item for item in body), body)
 
         with tempfile.TemporaryDirectory() as tmp:
             repo = self._repo(Path(tmp))
             self._commit(
                 repo,
-                f"reviewed\n\nReviewed-by: Pat <{GMAIL}>",
+                f"reviewed\n\nReviewed-by: Pat <{FOREIGN}>",
                 author=ALLOWED_EMAIL,
                 committer=ALLOWED_EMAIL,
             )
             trailer = problems(repo)
-            self.assertTrue(any(GMAIL in item for item in trailer), trailer)
+            self.assertTrue(any(FOREIGN in item for item in trailer), trailer)
 
         with tempfile.TemporaryDirectory() as tmp:
             repo = self._repo(Path(tmp))
             self._commit(
                 repo,
                 f"the maintainer address {ALLOWED_EMAIL} is allowed in prose",
+                author=ALLOWED_EMAIL,
+                committer=ALLOWED_EMAIL,
+            )
+            self.assertEqual(problems(repo), [])
+
+    def test_address_followed_by_dot_or_hyphen_is_rejected(self) -> None:
+        cases = (
+            (f"Thanks to {FOREIGN}.", FOREIGN),
+            (f"{FOREIGN}-based", FOREIGN),
+            ("see noreply@example.com.evil.io", "noreply@example.com.evil.io"),
+        )
+        for message, needle in cases:
+            with tempfile.TemporaryDirectory() as tmp:
+                repo = self._repo(Path(tmp))
+                self._commit(repo, message, author=ALLOWED_EMAIL, committer=ALLOWED_EMAIL)
+                found = problems(repo)
+                self.assertTrue(any(needle in item for item in found), (message, found))
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = self._repo(Path(tmp))
+            self._commit(
+                repo,
+                f"Thanks to {ALLOWED_EMAIL}.",
                 author=ALLOWED_EMAIL,
                 committer=ALLOWED_EMAIL,
             )
@@ -168,7 +191,7 @@ class CommitHygieneTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
             origin = self._repo(base / "origin")
-            self._commit(origin, "hidden bad root", author=GMAIL, committer=ALLOWED_EMAIL)
+            self._commit(origin, "hidden bad root", author=FOREIGN, committer=ALLOWED_EMAIL)
             self._commit(
                 origin,
                 "clean tip",
@@ -196,7 +219,7 @@ class CommitHygieneTests(unittest.TestCase):
             self.assertEqual(count.stdout.strip(), "1", count.stderr)
             found = problems(clone)
             self.assertTrue(any("shallow" in item for item in found), found)
-            self.assertFalse(any(GMAIL in item for item in found), found)
+            self.assertFalse(any(FOREIGN in item for item in found), found)
 
     def test_unreachable_branch_is_checked_only_with_all(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -206,14 +229,14 @@ class CommitHygieneTests(unittest.TestCase):
             self._commit(
                 repo,
                 "only on the side branch",
-                author=GMAIL,
+                author=FOREIGN,
                 committer=ALLOWED_EMAIL,
                 allow_empty=True,
             )
             self._git(repo, "checkout", "main")
             self.assertEqual(problems(repo), [])
             found = problems(repo, all_refs=True)
-            self.assertTrue(any(GMAIL in item for item in found), found)
+            self.assertTrue(any(FOREIGN in item for item in found), found)
             self.assertEqual(self._main_args(["--all", str(repo)]), 1)
 
             self._git(repo, "checkout", "-b", "nicknamed")
@@ -227,7 +250,7 @@ class CommitHygieneTests(unittest.TestCase):
                 allow_empty=True,
             )
             self._git(repo, "checkout", "main")
-            # The gmail commit is still on ``side``. Drop that ref and keep the
+            # The foreign commit is still on ``side``. Drop that ref and keep the
             # nickname branch, which is not on main.
             self._git(repo, "branch", "-D", "side")
             self.assertEqual(problems(repo, all_refs=True), [])
@@ -245,13 +268,98 @@ class CommitHygieneTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             parent = self._repo(Path(tmp) / "parent")
-            self._commit(parent, "parent is tainted", author=GMAIL, committer=ALLOWED_EMAIL)
+            self._commit(parent, "parent is tainted", author=FOREIGN, committer=ALLOWED_EMAIL)
             export = parent / "export"
             export.mkdir()
             (export / "README.md").write_text("not a repository\n", encoding="utf-8")
             tainted = problems(export)
             self.assertTrue(any("toplevel" in item for item in tainted), tainted)
-            self.assertFalse(any(GMAIL in item for item in tainted), tainted)
+            self.assertFalse(any(FOREIGN in item for item in tainted), tainted)
+
+    def test_name_rule_uses_origin_main_then_head(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = self._repo(Path(tmp))
+            self._commit(
+                repo,
+                "detached name",
+                author=ALLOWED_EMAIL,
+                committer=ALLOWED_EMAIL,
+                author_name="Pat",
+                committer_name="Pat",
+            )
+            self._git(repo, "checkout", "--detach")
+            self._git(repo, "branch", "-D", "main")
+            found = problems(repo)
+            self.assertTrue(any("author name 'Pat'" in item for item in found), found)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = self._repo(Path(tmp))
+            self._commit(
+                repo,
+                "remote main name",
+                author=ALLOWED_EMAIL,
+                committer=ALLOWED_EMAIL,
+                author_name="Pat",
+                committer_name="Pat",
+            )
+            self._git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+            self._git(repo, "checkout", "--detach")
+            self._git(repo, "branch", "-D", "main")
+            found = problems(repo, all_refs=True)
+            self.assertTrue(any("author name 'Pat'" in item for item in found), found)
+
+    def test_missing_main_ref_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            self._git(repo, "init", "-b", "main")
+            found = problems(repo)
+            self.assertTrue(
+                any("refs/heads/main, origin/main, and HEAD did not resolve" in item for item in found),
+                found,
+            )
+
+    def test_stash_is_excluded_from_all(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = self._repo(Path(tmp))
+            self._commit(repo, "clean", author=ALLOWED_EMAIL, committer=ALLOWED_EMAIL)
+            (repo / "README.md").write_text("dirty\n", encoding="utf-8")
+            env = os.environ.copy()
+            env.update(
+                {
+                    "GIT_AUTHOR_NAME": "Pat",
+                    "GIT_AUTHOR_EMAIL": FOREIGN,
+                    "GIT_COMMITTER_NAME": "Pat",
+                    "GIT_COMMITTER_EMAIL": FOREIGN,
+                }
+            )
+            stashed = subprocess.run(
+                [
+                    "git",
+                    "-c",
+                    "commit.gpgsign=false",
+                    "-c",
+                    "core.hooksPath=/dev/null",
+                    "stash",
+                    "push",
+                    "-m",
+                    "wip",
+                ],
+                cwd=repo,
+                check=False,
+                capture_output=True,
+                text=True,
+                env=env,
+            )
+            self.assertEqual(stashed.returncode, 0, stashed.stderr)
+            stash = subprocess.run(
+                ["git", "log", "-1", "--format=%ae", "refs/stash"],
+                cwd=repo,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(stash.stdout.strip(), FOREIGN, stash.stderr)
+            self.assertEqual(problems(repo, all_refs=True), [])
 
     def test_script_entrypoint_rejects_extra_args(self) -> None:
         self.assertEqual(self._main_args(["one", "two"]), 2)

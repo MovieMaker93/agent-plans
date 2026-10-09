@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
 """Fail if selected history breaks the maintainer identity rules.
 
-Commits on ``refs/heads/main`` must use the author and committer name
-``mr-r0b0t`` (change it with ``--name``) and the address
-``noreply@example.com``. Every selected commit is rejected when its author
-or committer address differs, when a ``Co-authored-by`` or ``Signed-off-by``
-trailer is present, or when any other email appears in the message.
-``--all`` selects every ref instead of ``HEAD``.
+The default selection is commits reachable from HEAD. ``--all`` selects
+every ref except ``refs/stash``. Author and committer addresses, trailers,
+and any other email in the message are checked on every selected commit.
+The author and committer name must be ``mr-r0b0t`` (change it with
+``--name``) on the first ref that exists among ``refs/heads/main``,
+``origin/main``, and ``HEAD``. If none of those resolve, the command fails.
 
 The git toplevel must be the directory you named. A shallow repository is
 rejected because older commits would be invisible. Requires the ``git``
@@ -28,9 +28,17 @@ _FORBIDDEN_TRAILER_RE = re.compile(
     r"^\s*(co-authored-by|signed-off-by)\s*:",
     re.IGNORECASE,
 )
+# A trailing "." or "-" is punctuation or a suffix, not part of the address.
+# Extra dotted labels stay inside the match, so noreply@example.com.evil.io
+# is one foreign address rather than the allowed address plus a suffix.
 _EMAIL_RE = re.compile(
-    r"(?<![A-Za-z0-9._%+-])[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}(?![A-Za-z0-9.-])"
+    r"(?<![A-Za-z0-9._%+-])"
+    r"[A-Za-z0-9._%+-]+@"
+    r"(?:[A-Za-z0-9-]+\.)+"
+    r"[A-Za-z]{2,}"
+    r"(?![A-Za-z0-9])"
 )
+_MAIN_REFS = ("refs/heads/main", "origin/main", "HEAD")
 
 
 def _git(
@@ -89,14 +97,18 @@ def _prepare(repo: Path) -> tuple[Path | None, list[str]]:
     return toplevel, []
 
 
-def _main_commits(repo: Path) -> set[str]:
-    present = _git(repo, "rev-parse", "--verify", "--quiet", "refs/heads/main")
-    if present.returncode != 0:
-        return set()
-    listed = _git(repo, "rev-list", "refs/heads/main")
-    if listed.returncode != 0:
-        return set()
-    return {line for line in listed.stdout.splitlines() if line}
+def _main_commits(repo: Path) -> tuple[set[str], list[str]]:
+    """Commits on local main, else origin/main, else HEAD."""
+    for ref in _MAIN_REFS:
+        present = _git(repo, "rev-parse", "--verify", "--quiet", ref)
+        if present.returncode != 0:
+            continue
+        listed = _git(repo, "rev-list", ref)
+        if listed.returncode != 0:
+            detail = (listed.stderr or listed.stdout).strip() or f"git rev-list {ref} failed"
+            return set(), [detail]
+        return {line for line in listed.stdout.splitlines() if line}, []
+    return set(), ["no main ref: refs/heads/main, origin/main, and HEAD did not resolve"]
 
 
 def _message_problems(repo: Path, label: str, body: str) -> list[str]:
@@ -129,15 +141,18 @@ def problems(
     _toplevel, blocked = _prepare(repo)
     if blocked:
         return blocked
+    on_main, found = _main_commits(repo)
     command = ["log", "-z", "--format=%H%x1e%an%x1e%ae%x1e%cn%x1e%ce%x1e%B"]
-    command.append("--all" if all_refs else "HEAD")
+    if all_refs:
+        # Stashes are local and are not part of the published history.
+        command.extend(["--exclude=refs/stash", "--all"])
+    else:
+        command.append("HEAD")
     result = _git(repo, *command)
     if result.returncode != 0:
         detail = (result.stderr or result.stdout).strip() or "git log failed"
-        return [detail]
-
-    on_main = _main_commits(repo)
-    found: list[str] = []
+        found.append(detail)
+        return found
     for record in result.stdout.split("\0"):
         if not record:
             continue
@@ -162,7 +177,11 @@ def problems(
 
 def _parse(argv: list[str]) -> tuple[argparse.Namespace | None, int | None]:
     parser = argparse.ArgumentParser(prog="check_commit_hygiene.py")
-    parser.add_argument("--all", action="store_true", help="check every ref, not only HEAD")
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="check every ref except refs/stash, not only HEAD",
+    )
     parser.add_argument(
         "--name",
         default=DEFAULT_NAME,
