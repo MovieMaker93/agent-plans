@@ -5,7 +5,7 @@ schema_version: 1
 kind: portfolio-schedule
 ordering: "priority, then deadline, then least slack"
 origin: "2026-10-08T09:00:00-05:00"
-makespan_hours: 123
+makespan_hours: 124
 overallocated: []
 plans:
   - plan_id: launch-announce-2026-10
@@ -122,4 +122,12 @@ tasks:
     finish: 123
     slack: 0
     duration_hours: 2
+    priority: 1
+  - plan_id: swiss-job-search-2026-10
+    task_id: T6
+    assignee: application-tracker
+    start: 123
+    finish: 124
+    slack: 0
+    duration_hours: 1
     priority: 1

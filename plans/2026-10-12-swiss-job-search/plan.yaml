@@ -3,21 +3,24 @@
 # graph. Neither fits a search that must stop before an irreversible application.
 schema_version: 1
 plan_id: swiss-job-search-2026-10
-version: 1
+version: 2
 title: Swiss DevSecOps job search
 priority: 1
 goal: >
   Find Swiss DevSecOps, Kubernetes, platform, and cloud engineering roles
   that fit a Swiss B work permit and a minimum salary of CHF 120000 per year,
   research each employer, tailor a CV and cover letter per role, verify each
-  tailored CV against the posting, and submit an application only after a
-  person approves that role.
+  tailored CV against the posting, submit an application only after a
+  person approves that role, and keep one status record for every role
+  from shortlist through submission.
 owner: orchestrator
 definition_of_done: >
   role_shortlist.md, company_briefs.md, and tailored_applications.md exist.
   cv_match_report.md records pass or fail for each role. approval_record.md
   records a person's decision. application_record.md shows a receipt only for
   roles that person approved, and shows that no other role was submitted.
+  application_status.md lists every shortlisted role and its status through
+  submission, and it is the source of truth for that state.
 budget:
   tokens: 1200000
   hours: 60
@@ -43,6 +46,7 @@ deliverables:
   - cv_match_report.md
   - approval_record.md
   - application_record.md
+  - application_status.md
 tasks:
   - id: T1
     title: Find matching Swiss roles
@@ -307,6 +311,55 @@ tasks:
       hours: 4
       usd: 0
     max_retries: 1
+    status: planned
+    actuals:
+      start: null
+      end: null
+      hours: null
+      attempts: 0
+
+  - id: T6
+    title: Log application status
+    section: Tracking
+    task_type: application_tracking
+    objective: >
+      Write the status of every shortlisted role through submission.
+      application_status.md is the source of truth. Each role is shortlisted,
+      then held or submitted. A submitted role carries the receipt from
+      application_record.md. Log this after T5, once submissions exist.
+    inputs:
+      - artifact: role_shortlist.md
+        from_task: T1
+      - artifact: approval_record.md
+        from_task: M1
+      - artifact: application_record.md
+        from_task: T5
+    outputs:
+      - artifact: application_status.md
+        type: markdown
+    depends_on:
+      - T5
+    estimate_hours:
+      optimistic: 0.5
+      likely: 1
+      pessimistic: 1.5
+    required_capabilities:
+      - application_tracking
+      - status_reporting
+    assignee: application-tracker
+    acceptance_criteria:
+      - application_status.md lists every role in role_shortlist.md.
+      - Each role is marked held or submitted, matching approval_record.md.
+      - Each submitted role cites the receipt in application_record.md.
+      - A role marked hold has no receipt.
+    risk: low
+    reversible: true
+    needs_human: false
+    budget:
+      tokens: 40000
+      hours: 2
+      usd: 0
+    max_retries: 2
     status: planned
     actuals:
       start: null

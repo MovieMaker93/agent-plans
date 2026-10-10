@@ -7,7 +7,7 @@ Read-only. A later bot UI can serve this file. Nothing here calls the network.
 - Live plans: 2
 - Open plans in the shared schedule: 2
 - Shared ordering: priority, then deadline, then least slack
-- Shared makespan hours: 123
+- Shared makespan hours: 124
 - Over-allocated assignees: (none)
 
 ## Portfolio
@@ -26,11 +26,11 @@ Read-only. A later bot UI can serve this file. Nothing here calls the network.
 
 ### swiss-job-search-2026-10
 
-- Progress: 0/6
-- Makespan hours: 34
-- Critical path: T1 -> T2 -> T3 -> T4 -> M1 -> T5
+- Progress: 0/7
+- Makespan hours: 35
+- Critical path: T1 -> T2 -> T3 -> T4 -> M1 -> T5 -> T6
 - Priority: 1
-- hours: 34/60 (0.5667) ok
+- hours: 35/60 (0.5833) ok
 - tokens: n/a
 - usd: n/a
 - Forecast hold: no
@@ -55,6 +55,7 @@ Times are hours after the shared origin. This is the leveled schedule.
 | swiss-job-search-2026-10 | T4 | accuracy | 117 | 121 |
 | swiss-job-search-2026-10 | M1 | human | 121 | 121 |
 | swiss-job-search-2026-10 | T5 | human | 121 | 123 |
+| swiss-job-search-2026-10 | T6 | application-tracker | 123 | 124 |
 
 ## Ready queue
 
@@ -79,8 +80,8 @@ Times are hours after the shared origin. This is the leveled schedule.
 ### swiss-job-search-2026-10
 
 - Actual hours: 0
-- Remaining hours: 34
-- hours: 34/60 (0.5667) ok
+- Remaining hours: 35
+- hours: 35/60 (0.5833) ok
 - tokens: n/a
 - usd: n/a
 - Forecast hold: no

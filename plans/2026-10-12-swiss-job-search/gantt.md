@@ -2,11 +2,11 @@
 
 Generated from `plan.yaml` by `python -m planner gantt`. Do not edit by hand.
 
-- Plan: swiss-job-search-2026-10 v1
+- Plan: swiss-job-search-2026-10 v2
 - Origin: 2026-10-12T09:00:00+02:00
-- CPM duration: 34h (std dev 2.8087h along the critical path)
-- Resource-constrained makespan: 34h
-- Critical path: T1, T2, T3, T4, M1, T5
+- CPM duration: 35h (std dev 2.8137h along the critical path)
+- Resource-constrained makespan: 35h
+- Critical path: T1, T2, T3, T4, M1, T5, T6
 - `crit` means unconstrained CPM slack is zero. Bar times are the resource-constrained schedule.
 
 | ID | Start | Finish | Slack | Assignee | Critical |
@@ -17,10 +17,11 @@ Generated from `plan.yaml` by `python -m planner gantt`. Do not edit by hand.
 | T4 | 28 | 32 | 0 | accuracy | yes |
 | M1 | 32 | 32 | 0 | human | yes |
 | T5 | 32 | 34 | 0 | human | yes |
+| T6 | 34 | 35 | 0 | application-tracker | yes |
 
 ```mermaid
 gantt
-    title Swiss DevSecOps job search v1
+    title Swiss DevSecOps job search v2
     dateFormat YYYY-MM-DD HH:mm
     axisFormat %m-%d %H:%M
     section Search
@@ -34,4 +35,6 @@ gantt
     section Gate
     M1 Approve applications - human :milestone, crit, m1, 2026-10-13 17:00, 0m
     T5 Submit approved applications - human :crit, t5, 2026-10-13 17:00, 2h
+    section Tracking
+    T6 Log application status - application-tracker :crit, t6, 2026-10-13 19:00, 1h
 ```
