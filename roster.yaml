@@ -87,6 +87,14 @@ bots:
       - cv_writing
       - cover_letter
     capacity: 1
+  - name: application-tracker
+    description: >
+      Application Tracker. Tracks every job application and its status.
+      The single source of truth for application state.
+    capabilities:
+      - application_tracking
+      - status_reporting
+    capacity: 1
   - name: searcher
     description: General research. Company briefs, sources, and synthesis.
     capabilities:
